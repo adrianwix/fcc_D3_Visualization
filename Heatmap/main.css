@@ -1,0 +1,20 @@
+#chart > svg {
+	border: 2px solid black;
+}
+
+#title {
+	fill: black;
+}
+
+div.header {
+	text-align: center;
+}
+
+.tooltip {
+	position: absolute;
+	border: 1px solid black;
+	border-radius: 5px;
+	padding: 10px;
+	font-size: 16px;
+	background: white;
+}
