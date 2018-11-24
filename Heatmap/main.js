@@ -224,7 +224,7 @@
 		.call(legendXAxis);
 
 	// Add the tooltip area to the webpage
-	var tooltip = d3
+	const tooltip = d3
 		.select("body")
 		.append("div")
 		.attr("class", "tooltip")

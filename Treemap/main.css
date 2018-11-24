@@ -1,0 +1,15 @@
+rect {
+	stroke: white;
+}
+.node-label {
+	font-size: 10px;
+}
+.tooltip {
+	position: absolute;
+	display: none;
+	border: 1px solid black;
+	border-radius: 5px;
+	padding: 10px;
+	font-size: 16px;
+	background: white;
+}
