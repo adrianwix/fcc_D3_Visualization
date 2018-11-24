@@ -4,14 +4,18 @@
 	const { baseTemperature, monthlyVariance } = await d3
 		.json(url)
 		.catch(e => console.log(e));
-	console.log(baseTemperature);
-	console.log(monthlyVariance);
 
-	const margin = { top: 50, right: 50, bottom: 100, left: 60 },
-		innerWidth = window.innerWidth,
-		width = innerWidth - margin.left - margin.right,
-		height = 430 - margin.top - margin.bottom,
-		gridSize = Math.floor(width / 24);
+	const margin = { top: 50, right: 50, bottom: 100, left: 60 };
+	const innerWidth = window.innerWidth;
+	const width = innerWidth - margin.left - margin.right;
+	const height = 430 - margin.top - margin.bottom;
+	const legendWidth = 500;
+	const legendHeight = 30;
+	const legendCellWidth = legendWidth / 11;
+
+	const variances = monthlyVariance.map(x => baseTemperature + x.variance);
+	const minTemp = d3.min(variances);
+	const maxTemp = d3.max(variances);
 
 	function getMonth(month) {
 		let date = new Date(0);
@@ -45,6 +49,7 @@
 				baseTemperature +
 				" &#8451;"
 		);
+
 	// Create SVG
 	let svg = d3
 		.select("#chart")
@@ -55,11 +60,13 @@
 
 	// X
 	let xValue = x => x.year;
+
 	let xScale = d3
 		.scaleBand()
 		.domain(monthlyVariance.map(x => xValue(x)))
 		.rangeRound([0, width])
 		.align(0.1);
+
 	let xAxis = d3
 		.axisBottom(xScale)
 		.tickValues(
@@ -72,6 +79,7 @@
 			date.setUTCFullYear(year);
 			return d3.utcFormat("%Y")(date);
 		});
+
 	svg
 		.append("g")
 		.call(xAxis)
@@ -79,11 +87,14 @@
 		.attr("transform", `translate(${margin.left} ,${height + margin.top})`);
 
 	let yValue = y => y.month;
+
 	let yScale = d3
 		.scaleBand()
 		.domain(monthlyVariance.map(x => yValue(x)))
 		.rangeRound([0, height]);
+
 	let yAxis = d3.axisLeft(yScale).tickFormat(month => getMonth(month));
+
 	svg
 		.append("g")
 		.call(yAxis)
@@ -94,10 +105,7 @@
 	let colorScale = d3
 		.scaleLinear()
 		.range([1, 0])
-		.domain([
-			d3.min(monthlyVariance.map(x => baseTemperature + x.variance)),
-			d3.max(monthlyVariance.map(x => baseTemperature + x.variance))
-		]);
+		.domain([minTemp, maxTemp]);
 
 	// Rects
 	svg
@@ -134,11 +142,12 @@
 			return d3.interpolateRdYlBu(colorScale(baseTemperature + d.variance));
 		})
 		.on("mouseover", function(d) {
-			console.log(d);
-			console.log(d3.event.pageX, d3.event.pageY);
+			// console.log(d);
+			// console.log(d3.event.pageX, d3.event.pageY);
 			tooltip
 				.transition()
 				.duration(200)
+				.style("display", "block")
 				.style("opacity", 0.9);
 			tooltip
 				.html(
@@ -147,8 +156,72 @@
 				)
 				.style("left", d3.event.pageX + 5 + "px")
 				.style("top", d3.event.pageY - 28 + "px")
-				.attr("data-year", d.Year);
+				.attr("data-year", d.year);
+		})
+		.on("mouseout", function(d) {
+			tooltip
+				.transition()
+				.duration(0)
+				.style("display", "none")
+				.style("opacity", 0);
 		});
+
+	// Max - Min temperature / 11 Colors
+	const thresholdDomainFunc = (min, max, count) => {
+		let array = [];
+		let step = (max - min) / count;
+		let base = min;
+		for (let i = 0; i < count; i++) {
+			array.push(base + i * step);
+		}
+		return array;
+	};
+
+	const thresholdDomain = thresholdDomainFunc(minTemp, maxTemp, 11);
+
+	const thresholdRange = thresholdDomain.map(x =>
+		d3.interpolateRdYlBu(colorScale(x))
+	);
+
+	const legendThreshold = d3
+		.scaleThreshold()
+		.range(thresholdRange)
+		.domain(thresholdDomain);
+
+	const legendXScale = d3
+		.scaleLinear()
+		.domain([minTemp, maxTemp])
+		.range([0, legendWidth]);
+
+	const legendXAxis = d3
+		.axisBottom(legendXScale)
+		.tickValues(thresholdDomain)
+		.tickFormat(d3.format(".1f"));
+
+	const legendY = height + margin.bottom + margin.top - legendHeight * 2;
+	// Legend Axis
+	const legend = svg
+		.append("g")
+		.attr("class", "legend")
+		.attr("id", "legend")
+		.attr("transform", "translate(" + margin.left + "," + legendY + ")");
+
+	legend
+		.append("g")
+		.selectAll("rect")
+		.data(thresholdDomain)
+		.enter()
+		.append("rect")
+		.style("fill", d => legendThreshold(d))
+		.attr("x", (d, i) => legendCellWidth * i)
+		.attr("y", 0)
+		.attr("width", legendCellWidth)
+		.attr("height", legendHeight);
+
+	legend
+		.append("g")
+		.attr("transform", "translate(" + 0 + "," + legendHeight + ")")
+		.call(legendXAxis);
 
 	// Add the tooltip area to the webpage
 	var tooltip = d3
