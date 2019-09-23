@@ -1,0 +1,18 @@
+#chart {
+  text-align: center;
+  margin: 50px 0;
+  height: 700px;
+}
+rect.bar:hover {
+  fill: red;
+}
+div#tooltip {
+  position: absolute;
+  width: auto;
+  text-align: center;
+  background-color: black;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  display: none;
+}

@@ -1,8 +1,8 @@
 (async function() {
-	// const width = innerWidth - margin.left - margin.right;
-	const width = 960;
-	// const height = Math.round(innerWidth / 1.9);
-	const height = 570;
+	const width = innerWidth - 60;
+	// const width = 960;
+	const height = Math.round(innerWidth / 1.9);
+	// const height = 570;
 
 	const VIDEO_GAMES =
 		"https://cdn.rawgit.com/freeCodeCamp/testable-projects-fcc/a80ce8f9/src/data/tree_map/video-game-sales-data.json";
